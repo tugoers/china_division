@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>中国行政区划</title>
+</head>
+<body>
+<form action="/location" method="post">
+    <label for="province-select">省级</label>
+    <select name="province" id="province-select"></select>
+
+    <label for="city-select">市级</label>
+    <select name="city" id="city-select"></select>
+
+    <label for="county-select">区县</label>
+    <select name="county" id="county-select"></select>
+
+    <button type="submit">提交</button>
+</form>
+</body>
+<script src="./js/jquery.min.js"></script>
+<script>
+    var $province = $('#province-select');
+    var $city = $('#city-select');
+    var $county = $('#county-select');
+
+    // 监听 city 选项
+    $city.on("change", function () {
+        var code = $city.val();
+        // 初始化 county 选项
+        $county.html('<option value="'+code+'00" selected></option>');
+        // 获取当前选中 city 的所有 county
+        $.getJSON("/counties?city="+code, function(result){
+            // 生成新的 html
+            var options = '';
+            $.each(result, function (i, field) {
+                options += '<option value="' + field[0] + '">' + field[1] + '</option>'
+            });
+            $county.html(options);
+            // 选中第一个 county
+            $county.children().first().attr('selected', true)
+        });
+    });
+
+    // 监听 province 选项
+    $province.on("change", function () {
+        var code = $province.val();
+        // 初始化 city 及 county 选项
+        $city.html('<option value="'+code+'00" selected></option>');
+        $county.html('<option value="'+code+'0000" selected></option>');
+
+        // 获取当前选中 province 的所有 city
+        $.getJSON("/cities?province="+code, function(result){
+            // 生成新的 html
+            var options = '';
+            $.each(result, function(i, field){
+                options += '<option value="' + field[0] + '">' + field[1] + '</option>'
+            });
+            $city.html(options);
+            // 选中第一个 city
+            $city.children().first().attr('selected', true);
+            // 触发 city 选中事件
+            $city.trigger("change")
+        });
+    });
+
+    // 获取所有省名及其代码
+    $.getJSON("/provinces",function(result){
+        // 生成 option
+        var options = '';
+        $.each(result, function(i, field){
+            options += '<option value="' + field[0] + '">' + field[1] + '</option>'
+        });
+        $province.html(options);
+        // 选中第一个省
+        $province.children().first().attr('selected', true);
+        // 触发 province 选中事件
+        $province.trigger("change")
+    });
+
+</script>
+</html>
